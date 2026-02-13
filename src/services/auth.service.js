@@ -33,7 +33,7 @@ export const loginUser = async (email, password) => {
       { expiresIn: "7d" }
     );
 
-    return { token, user: { id: user.id, email: user.email, role: user.role } };
+    return { token, user: { id: user.id, email: user.email, role: user.role , name:user.name } };
   } catch (error) {
     throw error;
   }
