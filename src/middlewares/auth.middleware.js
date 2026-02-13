@@ -13,7 +13,9 @@ export const authMiddleware = (req, res, next) => {
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = payload; // contains userId & role
     next();
-  } catch {
+    console.log("Decoded user role:", payload.role);
+
+  } catch (err) {
     res.status(401).json({ error: "Invalid token" });
   }
 };
@@ -21,9 +23,15 @@ export const authMiddleware = (req, res, next) => {
 // Role check middleware
 export const authorizeRoles = (...roles) => {
   return (req, res, next) => {
+    console.log("Allowed roles:", roles);
+    console.log("User role:", req.user.role);
+
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: "Forbidden: insufficient role" });
     }
     next();
   };
 };
+
+
+

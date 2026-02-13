@@ -25,7 +25,7 @@ router.post(
 router.get(
   "/",
   authMiddleware,
-  authorizeRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF),
+  authorizeRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.MANAGER),
   tourPackageController.getAllTourPackages
 );
 

@@ -1,5 +1,6 @@
-// user roles
 export const USER_ROLES = {
-    ADMIN: "ADMIN",
-    STAFF: "STAFF"
-}
+  ADMIN: "ADMIN",
+  MANAGER: "MANAGER",
+  STAFF: "STAFF",
+  MEMBER: "MEMBER"
+};

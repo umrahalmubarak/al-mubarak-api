@@ -12,7 +12,7 @@ const router = express.Router();
 router.post(
   "/",
   authMiddleware,
-  authorizeRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF),
+  authorizeRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF,USER_ROLES.MANAGER),
   createUploader("member").array("document", 10),
   memberController.createMember
 );
@@ -21,12 +21,12 @@ router.post(
 router.get(
   "/",
   authMiddleware,
-  authorizeRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF),
+  authorizeRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF,USER_ROLES.MANAGER),
   memberController.getAllMembers
 );
 
 // Get member by ID
-router.get("/:id", authMiddleware, memberController.getMemberById);
+router.get("/:id", authMiddleware, memberController.getMemberById , authorizeRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF,USER_ROLES.MANAGER),);
 
 // Update member with optional document upload
 router.put(
