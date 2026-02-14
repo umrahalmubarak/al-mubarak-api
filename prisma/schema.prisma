@@ -159,8 +159,3 @@ enum TourMemberStatus {
   ENQUIRY
 }
 
-INSERT INTO "TourPackage"
-(id, "packageName", "tourPrice", "totalSeat", "desc", "createdAt", "updatedAt", "createdById")
-VALUES
-('pkg1', 'Umrah Basic Package', 85000, 50, 'Basic Umrah package with 7 days stay', NOW(), NOW(), 'admin2'),
-('pkg2', 'Umrah Premium Package', 150000, 30, 'Premium Umrah package with luxury stay', NOW(), NOW(), 'admin2');
