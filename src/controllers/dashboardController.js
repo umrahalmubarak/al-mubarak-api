@@ -26,7 +26,7 @@ class DashboardController {
         dashboardData
       );
     } catch (error) {
-      console.error("Error fetching dashboard overview", {
+      console.error("Error fetching dashboard overview:",  error, {
         error: error.message,
         userId: req.user?.id,
       });
