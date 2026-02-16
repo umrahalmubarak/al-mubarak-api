@@ -1,6 +1,6 @@
 import prisma from "../config/prisma.js";
-import nodePath from "path";
-import { __dirname } from "../middlewares/upload.js";
+import supabase from "../utils/supabase.js";
+// import { __dirname } from "../middlewares/upload.js";
 
 function generateRandom4DigitNumber() {
   return Math.floor(Math.random() * 9000) + 1000;
@@ -15,63 +15,87 @@ function generateUserId(lastId) {
 }
 class MemberService {
   // Create new member
-  async createMember(memberData, files, createdBy) {
-    try {
-      // Process document files if provided
-      let documentJson = [];
-      if (files && files.length > 0) {
-        documentJson = files.map((file) => ({
-          filename: file.filename,
+ async createMember(memberData, files, createdBy) {
+  try {
+    let documentJson = [];
+
+    // 🔥 Upload files to Supabase if provided
+    if (files && files.length > 0) {
+
+      for (const file of files) {
+
+        const fileExt = file.mimetype.split("/")[1];
+        const fileName = `members/${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2)}.${fileExt}`;
+
+        const { error } = await supabase.storage
+          .from("member-document") 
+          .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+          });
+
+        if (error) {
+          throw new Error(`Supabase upload failed: ${error.message}`);
+        }
+
+        const { data } = supabase.storage
+          .from("member-document")
+          .getPublicUrl(fileName);
+
+        documentJson.push({
           originalName: file.originalname,
-          path: nodePath
-            .relative(nodePath.join(__dirname, ".."), file.path)
-            .replace(/\\/g, "/"),
+          url: data.publicUrl,
           mimetype: file.mimetype,
           size: file.size,
-        }));
+        });
       }
-
-      const lastUser = await prisma.user.findFirst({
-        where: {
-          id: { startsWith: "ALMB" },
-        },
-        orderBy: {
-          id: "desc", // Highest ID
-        },
-      });
-
-      // 2️⃣ Generate new ID
-      const newUserId = generateUserId(lastUser?.id);
-
-      console.log("created by", createdBy);
-
-      const user = await prisma.user.create({
-        data: {
-          id: newUserId,
-          email:
-            memberData.name + generateRandom4DigitNumber() + "@almubarak.com",
-          name: memberData.name,
-          password: "almubarak123",
-          role: "MEMBER",
-        },
-      });
-      const { userCreated, ...memberRecord } = memberData;
-      const member = await prisma.member.create({
-        data: {
-          id: newUserId,
-          ...memberRecord,
-          userid: user.id,
-          createdById: createdBy.userId,
-          document: documentJson,
-          extra: memberRecord.extra || {},
-        },
-      });
-
-      return member;
-    } catch (error) {
-      throw new Error(`Error creating member: ${error.message}`);
     }
+
+    // 🔥 Generate new user ID
+    const lastUser = await prisma.user.findFirst({
+      where: {
+        id: { startsWith: "ALMB" },
+      },
+      orderBy: {
+        id: "desc",
+      },
+    });
+
+    const newUserId = generateUserId(lastUser?.id);
+
+    // 🔥 Create user
+    const user = await prisma.user.create({
+      data: {
+        id: newUserId,
+        email:
+          memberData.name + generateRandom4DigitNumber() + "@almubarak.com",
+        name: memberData.name,
+        password: "almubarak123",
+        role: "MEMBER",
+      },
+    });
+
+    const { userCreated, ...memberRecord } = memberData;
+
+    // 🔥 Create member
+    const member = await prisma.member.create({
+      data: {
+        id: newUserId,
+        ...memberRecord,
+        userid: user.id,
+        createdById: createdBy.userId,
+        document: documentJson,
+        extra: memberRecord.extra || {},
+      },
+    });
+
+    return member;
+
+  } catch (error) {
+    throw new Error(`Error creating member: ${error.message}`);
   }
+}
   // Get all members with pagination
   async getAllMembers(page = 1, limit = 10, filters = {}) {
     try {
@@ -165,7 +189,6 @@ class MemberService {
         const newDocuments = files.map((file) => ({
           filename: file.filename,
           originalName: file.originalname,
-          path: file.path,
           mimetype: file.mimetype,
           size: file.size,
         }));

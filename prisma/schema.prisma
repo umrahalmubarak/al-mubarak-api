@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -21,12 +15,12 @@ model User {
   role           UserRole      @default(STAFF)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  EnquiryForm    EnquiryForm[] @relation("MemberCreatedBy")
   createdMembers Member[]      @relation("MemberCreatedBy")
   Member         Member[]      @relation("MemberUser")
-  TourPackage    TourPackage[] @relation("MemberCreatedBy")
-  TourMember     TourMember[]  @relation("MemberCreatedBy")
   Payment        Payment[]     @relation("MemberCreatedBy")
-  EnquiryForm    EnquiryForm[] @relation("MemberCreatedBy")
+  TourMember     TourMember[]  @relation("MemberCreatedBy")
+  TourPackage    TourPackage[] @relation("MemberCreatedBy")
 }
 
 model Member {
@@ -36,13 +30,13 @@ model Member {
   address     String
   document    Json
   extra       Json?
-  user        User         @relation("MemberUser", fields: [userid], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userid      String
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  TourMember  TourMember[]
-  createdBy   User?        @relation("MemberCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdById String?
+  createdBy   User?        @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  user        User         @relation("MemberUser", fields: [userid], references: [id], onDelete: Cascade)
+  TourMember  TourMember[] @relation("MemberToTourMember")
 }
 
 model TourPackage {
@@ -51,81 +45,65 @@ model TourPackage {
   tourPrice   Float
   totalSeat   Int
   coverPhoto  String?
-  desc        String       
+  desc        String
   extra       Json?
-  TourMember  TourMember[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-
-  createdBy   User?   @relation("MemberCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdById String?
+  TourMember  TourMember[]
+  createdBy   User?        @relation("MemberCreatedBy", fields: [createdById], references: [id])
 }
 
 model TourMember {
-  id String @id @default(cuid())
-
-  // Relations
-  members       Member[]
+  id            String           @id @default(cuid())
   memberIds     Json
-  tourPackage   TourPackage @relation(fields: [tourPackageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   tourPackageId String
-  payments      Payment[] // payment history
-
-  // Pricing & Group Info
-  packagePrice Float
-  memberCount  Int
-  netCost      Float
-  discount     Float?
-  totalCost    Float
-
-  // Payment
+  packagePrice  Float
+  memberCount   Int
+  netCost       Float
+  discount      Float?
+  totalCost     Float
   paymentType   PaymentType
-  paymentStatus PaymentStatus @default(PENDING)
-
-  // Reminder / WhatsApp
+  paymentStatus PaymentStatus    @default(PENDING)
   nextReminder  DateTime?
   lastReminder  DateTime?
-  reminderCount Int       @default(0)
-
-  status TourMemberStatus @default(BOOKED)
-
-  extra Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User?   @relation("MemberCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  createdById String?
+  reminderCount Int              @default(0)
+  status        TourMemberStatus @default(BOOKED)
+  extra         Json?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  createdById   String?
+  payments      Payment[]
+  createdBy     User?            @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  tourPackage   TourPackage      @relation(fields: [tourPackageId], references: [id], onDelete: Cascade)
+  members       Member[]         @relation("MemberToTourMember")
 }
 
 model Payment {
-  id           String     @id @default(cuid())
-  tourMember   TourMember @relation(fields: [tourMemberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  tourMemberId String
-
-  amount        Float // paid amount
+  id            String        @id @default(cuid())
+  tourMemberId  String
+  amount        Float
   paymentDate   DateTime      @default(now())
-  paymentMethod String // UPI, Cash, Card, etc.
-  note          String? // optional note
-  status        PaymentStatus @default(PAID) // in case of failed or pending transactions
+  paymentMethod String
+  note          String?
+  status        PaymentStatus @default(PAID)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-
-  createdBy   User?   @relation("MemberCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  createdById String?
+  createdById   String?
+  createdBy     User?         @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  tourMember    TourMember    @relation(fields: [tourMemberId], references: [id], onDelete: Cascade)
 }
 
 model EnquiryForm {
-  id        String            @id @default(cuid())
-  name      String
-  phone     String
-  purpose   String            
-  status    EnquiryFormStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-
-  createdBy   User?   @relation("MemberCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  id          String            @id @default(cuid())
+  name        String
+  phone       String
+  purpose     String
+  status      EnquiryFormStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   createdById String?
+  createdBy   User?             @relation("MemberCreatedBy", fields: [createdById], references: [id])
 }
 
 enum EnquiryFormStatus {
@@ -158,4 +136,3 @@ enum TourMemberStatus {
   BOOKED
   ENQUIRY
 }
-

@@ -1,7 +1,7 @@
 // ===== TOUR PACKAGE SERVICE =====
 // services/tourPackageService.js
 import nodePath from "path";
-import { __dirname } from "../middlewares/upload.js";
+// import { __dirname } from "../middlewares/upload.js";
 import prisma from "../config/prisma.js";
 class TourPackageService {
   // Create new tour package

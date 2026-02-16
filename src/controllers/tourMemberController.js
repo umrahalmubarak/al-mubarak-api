@@ -9,6 +9,7 @@ import {
   addPaymentSchema,
   updatePaymentSchema,
 } from "../validations/tourMemberValidator.js";
+import supabase from "../utils/supabase.js";
 
 class TourMemberController {
   async getAllTourMembers(req, res, next) {
@@ -43,24 +44,65 @@ class TourMemberController {
     }
   }
 
-  async createTourMember(req, res, next) {
-    try {
-      const validatedData = createTourMemberSchema.parse(req.body);
-      const tourMember = await tourMemberService.createTourMember(
-        validatedData,
-        req.user
-      );
+ async createTourMember(req, res, next) {
+  try {
+    // 1️⃣ Parse body normally
+    const validatedData = createTourMemberSchema.parse(req.body);
 
-      return successResponse(
-        res,
-        201,
-        "Tour member created successfully",
-        tourMember
-      );
-    } catch (error) {
-      next(error);
+    let imageUrl = null;
+
+    // 2️⃣ If image exists → upload to Supabase
+    if (req.file) {
+      const file = req.file;
+
+      const fileName = `tour-members/${Date.now()}-${file.originalname}`;
+
+      const { error } = await supabase.storage
+        .from("tour-member-images") // 👈 your bucket name
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        return res.status(500).json({
+          message: "Image upload failed",
+          error: error.message,
+        });
+      }
+
+      const { data } = supabase.storage
+        .from("tour-member-images")
+        .getPublicUrl(fileName);
+
+      imageUrl = data.publicUrl;
     }
+
+    // 3️⃣ Attach imageUrl inside extra field
+    const finalData = {
+      ...validatedData,
+      extra: {
+        ...validatedData.extra,
+        imageUrl,
+      },
+    };
+
+    // 4️⃣ Create tour member
+    const tourMember = await tourMemberService.createTourMember(
+      finalData,
+      req.user
+    );
+
+    return successResponse(
+      res,
+      201,
+      "Tour member created successfully",
+      tourMember
+    );
+
+  } catch (error) {
+    next(error);
   }
+}
 
   async updateTourMember(req, res, next) {
     try {
