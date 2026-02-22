@@ -105,6 +105,13 @@ model EnquiryForm {
   createdById String?
   createdBy   User?             @relation("MemberCreatedBy", fields: [createdById], references: [id])
 }
+model SystemSettings {
+  id           String   @id @default(cuid())
+  businessName String
+  logoUrl      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
 
 enum EnquiryFormStatus {
   PENDING
@@ -126,6 +133,7 @@ enum PaymentStatus {
 }
 
 enum UserRole {
+  SUPERADMIN
   ADMIN
   MANAGER
   STAFF

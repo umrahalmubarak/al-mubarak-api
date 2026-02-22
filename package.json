@@ -9,6 +9,9 @@
     "start": "node src/server.js",
     "prod:migrate": "prisma migrate deploy &&  node src/server.js"
   },
+  "prisma": {
+  "seed": "node prisma/seed.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",

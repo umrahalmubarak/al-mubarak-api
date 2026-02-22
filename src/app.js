@@ -16,6 +16,7 @@ import enquiryRoutes from "./routes/enquiry.routes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import authRoutes from "./routes/auth.routes.js";
+import systemRoutes from "./routes/system.route.js";
 
 
 const app = express();
@@ -65,6 +66,8 @@ app.use("/api/v1/payment-reminders", paymentReminderRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/usersR", usersRoutes);
 app.use("/api/v1/auth", authRoutes);
+
+app.use("/api/v1/system", systemRoutes);
 
 // Routes
 
