@@ -1,6 +1,5 @@
 // ===== TOUR PACKAGE SERVICE =====
 // services/tourPackageService.js
-import nodePath from "path";
 // import { __dirname } from "../middlewares/upload.js";
 import prisma from "../config/prisma.js";
 class TourPackageService {
@@ -9,16 +8,16 @@ class TourPackageService {
     try {
       // Process cover photo if provided
       let coverPhotoPath = "";
+
       if (file) {
-        coverPhotoPath = file.path;
+        // Assuming you uploaded to Supabase and returned publicUrl
+        coverPhotoPath = file.publicUrl || file.path;
       }
 
-      const tourPackage = await prisma.tourPackage.create({
+    const tourPackage = await prisma.tourPackage.create({
         data: {
           ...packageData,
-          coverPhoto: nodePath
-            .relative(nodePath.join(__dirname, ".."), coverPhotoPath)
-            .replace(/\\/g, "/"),
+          coverPhoto: coverPhotoPath,
           tourPrice: parseFloat(packageData.tourPrice),
           totalSeat: parseInt(packageData.totalSeat),
           createdById: createdBy.userId,
@@ -129,11 +128,7 @@ class TourPackageService {
       let coverPhotoPath = updateData.coverPhoto || existingPackage.coverPhoto;
 
       // Handle cover photo updates
-      if (file) {
-        coverPhotoPath = nodePath
-          .relative(nodePath.join(__dirname, ".."), file.path)
-          .replace(/\\/g, "/");
-      }
+      
 
       // Prepare update data
       const dataToUpdate = {
